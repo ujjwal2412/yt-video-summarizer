@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "YouTube Summarizer (Gemini)",
+  "version": "1.1",
+  "description": "Automatically summarizes YouTube videos using Google Gemini.",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://generativelanguage.googleapis.com/"
+  ],
+  "options_page": "options.html",
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/watch*"],
+      "js": ["content.js"],
+      "css": ["style.css"]
+    }
+  ],
+  "action": {
+    "default_title": "YouTube Summarizer Settings",
+    "default_popup": "options.html"
+  },
+  "icons": {
+    "16": "images/blank (Custom).png",
+    "48": "images/blank (Custom) (1).png",
+    "128": "images/blank (Custom) (2).png"
+  }
+}

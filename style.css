@@ -1,0 +1,41 @@
+#summary-panel {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 350px;
+  height: 100vh;
+  background-color: #181818;
+  border-right: 1px solid #383838;
+  z-index: 9999;
+  color: #fff;
+  font-family: 'Roboto', 'Arial', sans-serif;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out;
+}
+
+#summary-panel.visible {
+    transform: translateX(0);
+}
+
+#summary-panel h2 {
+  margin: 0 0 15px 0;
+  font-size: 1.2em;
+  border-bottom: 1px solid #383838;
+  padding-bottom: 10px;
+}
+
+#summary-content {
+  font-size: 0.9em;
+  line-height: 1.6;
+  white-space: pre-wrap; /* This preserves line breaks from the summary */
+}
+
+#summary-content .loader {
+    text-align: center;
+    padding: 20px;
+}
