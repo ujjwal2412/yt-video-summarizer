@@ -1,11 +1,13 @@
 #summary-panel {
   position: fixed;
-  left: 0;
+  /* CHANGE: Position on the right side */
+  right: 0; 
   top: 0;
   width: 350px;
   height: 100vh;
   background-color: #181818;
-  border-right: 1px solid #383838;
+  /* CHANGE: Border is now on the left */
+  border-left: 1px solid #383838; 
   z-index: 9999;
   color: #fff;
   font-family: 'Roboto', 'Arial', sans-serif;
@@ -14,10 +16,12 @@
   padding: 20px;
   box-sizing: border-box;
   overflow-y: auto;
-  transform: translateX(-100%);
+  /* CHANGE: Hide by translating to the right */
+  transform: translateX(100%); 
   transition: transform 0.3s ease-in-out;
 }
 
+/* This class now slides the panel in from the right */
 #summary-panel.visible {
     transform: translateX(0);
 }
@@ -27,6 +31,9 @@
   font-size: 1.2em;
   border-bottom: 1px solid #383838;
   padding-bottom: 10px;
+  display: flex; /* Use flexbox to align title and button */
+  justify-content: space-between;
+  align-items: center;
 }
 
 #summary-content {
@@ -38,4 +45,19 @@
 #summary-content .loader {
     text-align: center;
     padding: 20px;
+}
+
+/* NEW: Styles for our hide/show button */
+#toggle-summary-panel {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 5px;
+}
+
+#toggle-summary-panel:hover {
+  color: #fff;
 }
