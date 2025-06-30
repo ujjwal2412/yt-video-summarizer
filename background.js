@@ -12,7 +12,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
       
       try {
-        // Call the Gemini API
+        // Call the Gemini API with the correct model name
         const summary = await getGeminiSummary(request.transcript, apiKey);
         // Send the summary back to the content script
         chrome.tabs.sendMessage(sender.tab.id, { type: "summaryResult", summary: summary });
@@ -28,14 +28,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 async function getGeminiSummary(transcript, apiKey) {
-  // The Gemini API endpoint
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+  // --- THIS IS THE ONLY LINE THAT CHANGES ---
+  // We are replacing the old 'gemini-pro' with the new 'gemini-1.5-flash-latest' model.
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
   
-  // The prompt and the data structure for the Gemini API
+  // The request body structure is the same for Gemini 1.5 Flash
   const requestBody = {
     contents: [{
       parts: [{
-        text: `You are an expert summarizer. You will be given a transcript of a YouTube video and you must provide a concise, easy-to-read summary. Use bullet points for key takeaways. Here is the transcript:\n\n${transcript}`
+        text: `You are an expert summarizer. You will be given a transcript of a YouTube video and you must provide a concise, easy-to-read summary with excellent formatting. Use bolding for key terms and bullet points for the main takeaways. Here is the transcript:\n\n${transcript}`
       }]
     }]
   };
@@ -55,13 +56,15 @@ async function getGeminiSummary(transcript, apiKey) {
 
   const data = await response.json();
 
-  // The summary text is nested differently in the Gemini response
+  // The response structure is the same, so no changes needed here.
   try {
     const summaryText = data.candidates[0].content.parts[0].text;
     return summaryText.trim();
   } catch (e) {
-    // This can happen if the content is blocked by safety settings
     console.error("Error parsing Gemini response:", data);
-    throw new Error("Could not parse the summary from the API response. The content may have been blocked.");
+    if (data.promptFeedback && data.promptFeedback.blockReason) {
+        throw new Error(`Content blocked by safety settings. Reason: ${data.promptFeedback.blockReason}`);
+    }
+    throw new Error("Could not parse the summary from the API response.");
   }
 }
