@@ -2,7 +2,6 @@
 const panel = document.createElement('div');
 panel.id = 'summary-panel';
 
-// UPDATED: Added a button with an ID to the panel's HTML structure
 panel.innerHTML = `
   <h2>
     <span>Video Summary</span>
@@ -14,10 +13,9 @@ panel.innerHTML = `
 `;
 document.body.appendChild(panel);
 
-// --- NEW: LOGIC FOR THE HIDE/SHOW BUTTON ---
+// --- LOGIC FOR THE HIDE/SHOW BUTTON ---
 const toggleBtn = document.getElementById('toggle-summary-panel');
 toggleBtn.addEventListener('click', () => {
-  // Toggling the 'visible' class will trigger the CSS transition
   panel.classList.toggle('visible');
 });
 
@@ -27,22 +25,34 @@ setTimeout(() => {
 }, 100);
 
 
-// --- 2. LOGIC TO EXTRACT TRANSCRIPT --- (No changes in this section)
+// --- 2. LOGIC TO EXTRACT TRANSCRIPT (UPDATED LOGIC) ---
 function getTranscriptText() {
   return new Promise((resolve, reject) => {
+    // This data structure contains all the initial video information
     const playerResponse = window.ytInitialPlayerResponse;
     const captions = playerResponse?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
 
     if (!captions || captions.length === 0) {
-      return reject("No captions found for this video.");
+      return reject("No caption tracks found for this video.");
     }
     
-    const transcriptInfo = captions.find(c => c.languageCode === 'en' || c.vssId.startsWith('.en'));
+    // Priority 1: Find the standard, manually-created English transcript.
+    // These usually have a vssId that does NOT start with 'a.'
+    let transcriptInfo = captions.find(c => c.languageCode === 'en' && c.vssId && !c.vssId.startsWith('a.'));
 
+    // Priority 2: If no manual transcript, find the auto-generated one.
+    // These usually have a vssId that starts with 'a.' (for "auto")
     if (!transcriptInfo) {
-      return reject("No English transcript found.");
+        console.log("No manual English transcript found, searching for auto-generated transcript.");
+        transcriptInfo = captions.find(c => c.vssId && c.vssId.startsWith('a.en'));
     }
 
+    // If neither is found, reject.
+    if (!transcriptInfo) {
+      return reject("No English transcript (manual or auto-generated) found.");
+    }
+
+    // Fetch the transcript XML from the URL provided in the transcript info
     fetch(transcriptInfo.baseUrl)
       .then(response => response.text())
       .then(xmlText => {
@@ -51,7 +61,10 @@ function getTranscriptText() {
         const textNodes = xmlDoc.getElementsByTagName('text');
         let fullTranscript = "";
         for (let i = 0; i < textNodes.length; i++) {
-          fullTranscript += textNodes[i].textContent + " ";
+          // The transcript text can contain encoded HTML characters (e.g., ' for apostrophe)
+          // This line decodes them into normal text.
+          const decodedText = new DOMParser().parseFromString(textNodes[i].textContent, "text/html").documentElement.textContent;
+          fullTranscript += decodedText + " ";
         }
         resolve(fullTranscript);
       })
@@ -60,7 +73,7 @@ function getTranscriptText() {
 }
 
 
-// --- 3. COMMUNICATE WITH BACKGROUND SCRIPT --- (No changes in this section)
+// --- 3. COMMUNICATE WITH BACKGROUND SCRIPT --- (No changes here)
 async function main() {
   const summaryContentDiv = document.getElementById('summary-content');
   try {
