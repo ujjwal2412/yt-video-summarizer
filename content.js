@@ -1,25 +1,35 @@
 // --- 1. CREATE AND INJECT THE UI ---
 const panel = document.createElement('div');
 panel.id = 'summary-panel';
+
+// UPDATED: Added a button with an ID to the panel's HTML structure
 panel.innerHTML = `
-  <h2>Video Summary</h2>
+  <h2>
+    <span>Video Summary</span>
+    <button id="toggle-summary-panel" title="Hide/Show Panel">×</button>
+  </h2>
   <div id="summary-content">
     <div class="loader">Loading summary...</div>
   </div>
 `;
 document.body.appendChild(panel);
 
-// Show the panel
+// --- NEW: LOGIC FOR THE HIDE/SHOW BUTTON ---
+const toggleBtn = document.getElementById('toggle-summary-panel');
+toggleBtn.addEventListener('click', () => {
+  // Toggling the 'visible' class will trigger the CSS transition
+  panel.classList.toggle('visible');
+});
+
+// Show the panel automatically on page load
 setTimeout(() => {
     panel.classList.add('visible');
 }, 100);
 
 
-// --- 2. LOGIC TO EXTRACT TRANSCRIPT ---
+// --- 2. LOGIC TO EXTRACT TRANSCRIPT --- (No changes in this section)
 function getTranscriptText() {
   return new Promise((resolve, reject) => {
-    // YouTube's data is often in a global object or embedded in the HTML.
-    // This is a common way to find it, but it's brittle and might break if YouTube changes its structure.
     const playerResponse = window.ytInitialPlayerResponse;
     const captions = playerResponse?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
 
@@ -27,7 +37,6 @@ function getTranscriptText() {
       return reject("No captions found for this video.");
     }
     
-    // Find the English transcript. You could modify this to let the user choose a language.
     const transcriptInfo = captions.find(c => c.languageCode === 'en' || c.vssId.startsWith('.en'));
 
     if (!transcriptInfo) {
@@ -51,13 +60,12 @@ function getTranscriptText() {
 }
 
 
-// --- 3. COMMUNICATE WITH BACKGROUND SCRIPT ---
+// --- 3. COMMUNICATE WITH BACKGROUND SCRIPT --- (No changes in this section)
 async function main() {
   const summaryContentDiv = document.getElementById('summary-content');
   try {
     const transcript = await getTranscriptText();
     if (transcript) {
-      // Send transcript to the background script for summarization
       chrome.runtime.sendMessage({ type: "summarize", transcript: transcript });
     }
   } catch (error) {
@@ -66,7 +74,6 @@ async function main() {
   }
 }
 
-// Listen for the summary result from the background script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === "summaryResult") {
     const summaryContentDiv = document.getElementById('summary-content');
@@ -78,8 +85,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-// Run the main function
-// We wait a bit for the page's javascript to fully load the necessary data
 window.addEventListener('load', () => {
     setTimeout(main, 2000); 
 });
